@@ -8,9 +8,11 @@ export async function onRequest(context) {
   const { request, env } = context;
   const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' };
 
-  if (request.method === 'OPTIONS') return new Response(null, { headers: cors });
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: cors });
+  }
   if (request.method !== 'POST') {
-    return new Response(JSON.stringify({ ok: false, error: '仅支持POST' }), { status: 405, headers: { ...cors, 'Content-Type': 'application/json' } });
+    return new Response('Method Not Allowed', { status: 405, headers: cors });
   }
 
   const token = env.GH_TOKEN;
