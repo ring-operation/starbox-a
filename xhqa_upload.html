@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>星盒启A · 图片上传</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+body{background:#f0edff;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{background:#fff;border-radius:24px;padding:40px;width:100%;max-width:480px;box-shadow:0 8px 40px rgba(108,92,231,.15)}
+h1{font-size:22px;color:#2d1b69;margin-bottom:4px;text-align:center}
+h1 span{color:#6c5ce7}
+.sub{text-align:center;color:#888;font-size:14px;margin-bottom:24px}
+.dropzone{border:2px dashed #c8bfff;border-radius:16px;padding:50px 20px;text-align:center;cursor:pointer;transition:.2s;background:#faf8ff}
+.dropzone:hover,.dropzone.dragover{border-color:#6c5ce7;background:#f5f0ff}
+.dz-icon{font-size:48px;color:#6c5ce7;margin-bottom:12px}
+.dz-text{color:#666;font-size:15px}
+.dz-text b{color:#6c5ce7}
+.preview{display:none;margin-top:16px;border-radius:12px;overflow:hidden;background:#faf8ff;padding:12px}
+.preview img{width:100%;border-radius:8px;display:block}
+.preview-info{font-size:12px;color:#888;margin-top:8px}
+.btn{width:100%;padding:14px;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;transition:.2s;margin-top:16px;display:none}
+.btn-primary{background:#6c5ce7;color:#fff}
+.btn-primary:hover{background:#5b4cc4}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.msg{display:none;margin-top:16px;padding:16px;border-radius:12px;font-size:14px;line-height:1.7}
+.msg-up{background:#f0edff;color:#2d1b69}
+.msg-ok{background:#e8fce8;color:#1a7a1a}
+.msg-bad{background:#ffe8e8;color:#c0392b}
+.msg .nm{font-weight:700;color:#6c5ce7;font-size:15px;margin:4px 0}
+.btn2{display:none;width:100%;padding:10px;border:2px solid #6c5ce7;border-radius:12px;background:#fff;color:#6c5ce7;font-size:14px;font-weight:600;cursor:pointer;margin-top:8px;transition:.2s}
+.btn2:hover{background:#f5f0ff}
+.ft{margin-top:24px;text-align:center;font-size:12px;color:#bbb}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>星盒启A <span>✦</span></h1>
+  <p class="sub">拖图即传</p>
+
+  <div class="dropzone" id="dz">
+    <div class="dz-icon">📁</div>
+    <div class="dz-text">拖拽图片到这里<br>或 <b>点击选择</b></div>
+    <input type="file" id="fi" accept="image/*" style="display:none">
+  </div>
+
+  <div class="preview" id="pv">
+    <img id="pi" src="">
+    <div class="preview-info" id="pvi"></div>
+  </div>
+
+  <button class="btn btn-primary" id="ub">上传到仓库</button>
+
+  <div class="msg" id="msg"></div>
+
+  <button class="btn2" id="cpb">复制文件名</button>
+
+  <div class="ft">🌸 林缪斯 · scratchpad</div>
+</div>
+
+<script>
+const dz=document.getElementById('dz'),fi=document.getElementById('fi'),pv=document.getElementById('pv');
+const pi=document.getElementById('pi'),pvi=document.getElementById('pvi'),ub=document.getElementById('ub');
+const msg=document.getElementById('msg'),cpb=document.getElementById('cpb');
+let sf=null,fn='';
+
+dz.onclick=()=>fi.click();
+fi.onchange=()=>{if(fi.files[0])h(fi.files[0])};
+dz.ondragover=e=>{e.preventDefault();dz.classList.add('dragover')};
+dz.ondragleave=()=>dz.classList.remove('dragover');
+dz.ondrop=e=>{e.preventDefault();dz.classList.remove('dragover');if(e.dataTransfer.files[0])h(e.dataTransfer.files[0])};
+
+function h(f){
+  if(!f.type.startsWith('image/')){sh('只支持图片','b');return}
+  if(f.size>10*1024*1024){sh('图片不能超过10MB','b');return}
+  sf=f;
+  const r=new FileReader();
+  r.onload=e=>{pi.src=e.target.result;pv.style.display='block';pvi.textContent=f.name+' · '+(f.size/1024).toFixed(1)+'KB';ub.style.display='block';ub.disabled=false;ub.textContent='上传到仓库';hm()};
+  r.readAsDataURL(f);
+}
+
+ub.onclick=async()=>{
+  if(!sf)return;
+  ub.disabled=true;ub.textContent='上传中...';
+  sh('正在上传到仓库...','u');
+  const fd=new FormData();
+  fd.append('image',sf);
+  try{
+    const r=await fetch('/api/upload',{method:'POST',body:fd});
+    const d=await r.json();
+    if(d.ok){
+      fn=d.fileName;
+      sh('✅ 上传成功！<div class="nm">'+d.fileName+'</div>在星盒启A中发送这个文件名即可','o');
+      cpb.style.display='block';ub.textContent='✅ 已上传';
+    }else{sh('❌ '+(d.error||'失败'),'b');ub.disabled=false;ub.textContent='重新上传'}
+  }catch(e){sh('❌ '+e.message,'b');ub.disabled=false;ub.textContent='重新上传'}
+};
+
+cpb.onclick=()=>{navigator.clipboard.writeText(fn).then(()=>{cpb.textContent='✅ 已复制 "'+fn+'"';setTimeout(()=>cpb.textContent='复制文件名',2000)})};
+
+function sh(t,c){msg.style.display='block';msg.className='msg msg-'+c;msg.innerHTML=t}
+function hm(){msg.style.display='none'}
+</script>
+</body>
+</html>
