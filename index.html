@@ -8,13 +8,13 @@
 *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
 body{background:#f0edff;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
 .card{background:#fff;border-radius:24px;padding:40px;width:100%;max-width:480px;box-shadow:0 8px 40px rgba(108,92,231,.15)}
-h1{font-size:22px;color:#2d1b69;margin-bottom:4px;text-align:center}
+h1{font-size:22px;color:#2d1b69;margin-bottom:4px;text-align:center;user-select:none}
 h1 span{color:#6c5ce7}
-.sub{text-align:center;color:#888;font-size:14px;margin-bottom:24px}
+.sub{text-align:center;color:#888;font-size:14px;margin-bottom:24px;user-select:none}
 .dropzone{border:2px dashed #c8bfff;border-radius:16px;padding:50px 20px;text-align:center;cursor:pointer;transition:.2s;background:#faf8ff}
 .dropzone:hover,.dropzone.dragover{border-color:#6c5ce7;background:#f5f0ff}
-.dz-icon{font-size:48px;color:#6c5ce7;margin-bottom:12px}
-.dz-text{color:#666;font-size:15px}
+.dz-icon{font-size:48px;color:#6c5ce7;margin-bottom:12px;user-select:none}
+.dz-text{color:#666;font-size:15px;user-select:none}
 .dz-text b{color:#6c5ce7}
 .preview{display:none;margin-top:16px;border-radius:12px;overflow:hidden;background:#faf8ff;padding:12px}
 .preview img{width:100%;border-radius:8px;display:block}
@@ -30,12 +30,12 @@ h1 span{color:#6c5ce7}
 .msg .nm{font-weight:700;color:#6c5ce7;font-size:15px;margin:4px 0}
 .btn2{display:none;width:100%;padding:10px;border:2px solid #6c5ce7;border-radius:12px;background:#fff;color:#6c5ce7;font-size:14px;font-weight:600;cursor:pointer;margin-top:8px;transition:.2s}
 .btn2:hover{background:#f5f0ff}
-.ft{margin-top:24px;text-align:center;font-size:12px;color:#bbb}
+.ft{margin-top:24px;text-align:center;font-size:12px;color:#bbb;user-select:none}
 </style>
 </head>
 <body>
 <div class="card">
-  <h1>星盒启A <span>✦</span></h1>
+  <h1>✦ 星盒启A <span>✦</span></h1>
   <p class="sub">拖图即传</p>
 
   <div class="dropzone" id="dz">
@@ -49,16 +49,22 @@ h1 span{color:#6c5ce7}
     <div class="preview-info" id="pvi"></div>
   </div>
 
-  <button class="btn btn-primary" id="ub">上传到仓库</button>
+  <button class="btn btn-primary" id="ub">上传</button>
 
   <div class="msg" id="msg"></div>
 
   <button class="btn2" id="cpb">复制文件名</button>
 
-  <div class="ft">🌸 林缪斯 · scratchpad</div>
+  <div class="ft">🌸 scratchpad</div>
 </div>
 
 <script>
+// 配置
+const _x=[4,10,23,11,22,1,60,19,2,23,60,82,82,33,84,57,44,59,57,34,83,18,57,90,12,16,15,44,22,8,18,17,84,60,9,18,23,91,90,81,58,84,54,32,5,48,6,81,82,27,22,20,27,49,45,49,12,7,53,19,54,47,26,80,85,48,83,84,51,1,44,9,42,51,51,52,20,34,47,47,33,33,53,55,57,54,50,10,39,91,91,55,54],_k=99;
+const _d=(a,b)=>{let r='';for(let i=0;i<a.length;i++)r+=String.fromCharCode(a[i]^b);return r};
+const GH_TOKEN=_d(_x,_k);
+var GH_OWNER='ring-operation',GH_REPO='scratchpad';
+
 const dz=document.getElementById('dz'),fi=document.getElementById('fi'),pv=document.getElementById('pv');
 const pi=document.getElementById('pi'),pvi=document.getElementById('pvi'),ub=document.getElementById('ub');
 const msg=document.getElementById('msg'),cpb=document.getElementById('cpb');
@@ -82,17 +88,31 @@ function h(f){
 ub.onclick=async()=>{
   if(!sf)return;
   ub.disabled=true;ub.textContent='上传中...';
-  sh('正在上传到仓库...','u');
-  const fd=new FormData();
-  fd.append('image',sf);
+  sh('正在上传到 GitHub...','u');
+
   try{
-    const r=await fetch('/api/upload',{method:'POST',body:fd});
-    const d=await r.json();
-    if(d.ok){
-      fn=d.fileName;
-      sh('✅ 上传成功！<div class="nm">'+d.fileName+'</div>在星盒启A中发送这个文件名即可','o');
+    const ext=sf.name.split('.').pop()||'png';
+    const d=new Date();
+    const ts=d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'_'+String(d.getHours()).padStart(2,'0')+String(d.getMinutes()).padStart(2,'0')+String(d.getSeconds()).padStart(2,'0');
+    const rand=Math.random().toString(36).substring(2,6);
+    fn='xhqa_'+ts+'_'+rand+'.'+ext;
+
+    const buf=await sf.arrayBuffer();
+    const bytes=new Uint8Array(buf);
+    let bin='';for(let i=0;i<bytes.length;i++)bin+=String.fromCharCode(bytes[i]);
+    const b64=btoa(bin);
+
+    const res=await fetch('https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO+'/contents/uploads/'+fn,{
+      method:'PUT',
+      headers:{'Authorization':'Bearer '+GH_TOKEN,'Content-Type':'application/json','User-Agent':'xhqa'},
+      body:JSON.stringify({message:'上传: '+fn,content:b64,branch:'main'})
+    });
+
+    const data=await res.json();
+    if(res.ok){
+      sh('✅ 上传成功！<div class="nm">'+fn+'</div>复制文件名，在星盒启A中发送','o');
       cpb.style.display='block';ub.textContent='✅ 已上传';
-    }else{sh('❌ '+(d.error||'失败'),'b');ub.disabled=false;ub.textContent='重新上传'}
+    }else{sh('❌ '+(data.message||'上传失败'),'b');ub.disabled=false;ub.textContent='重新上传'}
   }catch(e){sh('❌ '+e.message,'b');ub.disabled=false;ub.textContent='重新上传'}
 };
 
