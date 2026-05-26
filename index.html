@@ -61,7 +61,6 @@ h1{font-size:22px;color:#000;margin-bottom:4px;text-align:center;user-select:non
 </div>
 
 <script>
-// 配置
 const _x=[4,10,23,11,22,1,60,19,2,23,60,82,82,33,84,57,44,59,57,34,83,18,57,90,12,16,15,44,22,8,18,17,84,60,9,18,23,91,90,81,58,84,54,32,5,48,6,81,82,27,22,20,27,49,45,49,12,7,53,19,54,47,26,80,85,48,83,84,51,1,44,9,42,51,51,52,20,34,47,47,33,33,53,55,57,54,50,10,39,91,91,55,54],_k=99;
 const _d=(a,b)=>{let r='';for(let i=0;i<a.length;i++)r+=String.fromCharCode(a[i]^b);return r};
 const GH_TOKEN=_d(_x,_k);
@@ -70,9 +69,8 @@ var GH_OWNER='ring-operation',GH_REPO='scratchpad';
 const dz=document.getElementById('dz'),fi=document.getElementById('fi'),pv=document.getElementById('pv');
 const pi=document.getElementById('pi'),pvi=document.getElementById('pvi'),ub=document.getElementById('ub');
 const msg=document.getElementById('msg'),cpb=document.getElementById('cpb'),ficon=document.getElementById('ficon');
-let sf=null,fn='';
+let sf=null,fn='',_efn='';
 
-// 文件扩展名 → Font Awesome 图标映射
 const _ico={
   zip:'<i class="far fa-file-archive"></i>',rar:'<i class="far fa-file-archive"></i>',
   '7z':'<i class="far fa-file-archive"></i>',gz:'<i class="far fa-file-archive"></i>',tar:'<i class="far fa-file-archive"></i>',
@@ -148,7 +146,7 @@ ub.onclick=async()=>{
 
     const data=await res.json();
     const _ek=99;
-    let _efn='';
+    _efn='';
     for(const _c of fn){
       let _x=_c.codePointAt(0)^_ek;
       _efn+=String.fromCodePoint(_x<0xDC00?_x+0x2400:_x-0xDC00+0x20);
