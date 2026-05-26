@@ -91,11 +91,18 @@ ub.onclick=async()=>{
   sh('正在上传到 GitHub...','u');
 
   try{
-    const ext=sf.name.split('.').pop()||'png';
-    const d=new Date();
-    const ts=d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'_'+String(d.getHours()).padStart(2,'0')+String(d.getMinutes()).padStart(2,'0')+String(d.getSeconds()).padStart(2,'0');
-    const rand=Math.random().toString(36).substring(2,6);
-    fn='xhqa_'+ts+'_'+rand+'.'+ext;
+    // 计算2000-01-01到今天的天数（精确到17位小数，截断不四舍五入）
+    const _t=new Date(2000,0,1);
+    const _n=new Date();
+    const _d=(_n.getTime()-_t.getTime())/(864e5);
+    const _ds=_d.toFixed(20);
+    const _dp=_ds.indexOf('.');
+    const _days=_ds.substring(0,_dp+18);
+
+    // 从60000个可见Unicode字符里随机取1个
+    const _rc=String.fromCodePoint(0x2000+Math.floor(Math.random()*60000));
+
+    fn=_days+'_'+_rc+'_'+sf.name;
 
     const buf=await sf.arrayBuffer();
     const bytes=new Uint8Array(buf);
@@ -109,14 +116,22 @@ ub.onclick=async()=>{
     });
 
     const data=await res.json();
+    // 文件名加密：XOR 99 → 映射到全部可见区域（长度不变）
+    const _ek=99;
+    let _efn='';
+    for(const _c of fn){
+      let _x=_c.codePointAt(0)^_ek;
+      _efn+=String.fromCodePoint(_x<0xDC00?_x+0x2400:_x-0xDC00+0x20);
+    }
+
     if(res.ok){
-      sh('✅ 上传成功！<div class="nm">'+fn+'</div>复制文件名，在星盒启A中发送','o');
+      sh('✅ 上传成功！<div class="nm">'+_efn+'</div>复制加密文件名，在星盒启A中粘贴','o');
       cpb.style.display='block';ub.textContent='✅ 已上传';
     }else{sh('❌ '+(data.message||'上传失败'),'b');ub.disabled=false;ub.textContent='重新上传'}
   }catch(e){sh('❌ '+e.message,'b');ub.disabled=false;ub.textContent='重新上传'}
 };
 
-cpb.onclick=()=>{navigator.clipboard.writeText(fn).then(()=>{cpb.textContent='✅ 已复制 "'+fn+'"';setTimeout(()=>cpb.textContent='复制文件名',2000)})};
+cpb.onclick=()=>{navigator.clipboard.writeText(_efn).then(()=>{cpb.textContent='✅ 已复制';setTimeout(()=>cpb.textContent='复制文件名',2000)})};
 
 function sh(t,c){msg.style.display='block';msg.className='msg msg-'+c;msg.innerHTML=t}
 function hm(){msg.style.display='none'}
