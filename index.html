@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>星盒启A · 文件上传</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
 body{background:#f0edff;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
@@ -18,7 +19,7 @@ h1 span{color:#6c5ce7}
 .dz-text b{color:#6c5ce7}
 .preview{display:none;margin-top:16px;border-radius:12px;overflow:hidden;background:#faf8ff;padding:12px}
 .preview img{width:100%;border-radius:8px;display:block}
-.preview .file-icon{font-size:48px;text-align:center;color:#6c5ce7;padding:16px 0;user-select:none}
+.preview .file-icon{font-size:48px;text-align:center;color:#6c5ce7;padding:16px 0}
 .preview-info{font-size:12px;color:#888;margin-top:8px;text-align:center}
 .btn{width:100%;padding:14px;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;transition:.2s;margin-top:16px;display:none}
 .btn-primary{background:#6c5ce7;color:#fff}
@@ -36,41 +37,63 @@ h1 span{color:#6c5ce7}
 </head>
 <body>
 <div class="card">
-  <h1>✦ 星盒启A <span>✦</span></h1>
-  <p class="sub">拖文件即传</p>
+  <h1><i class="fas fa-star" style="color:#6c5ce7;font-size:18px"></i> 星盒启A <span><i class="fas fa-arrow-up" style="font-size:16px"></i></span></h1>
+  <p class="sub"><i class="far fa-file" style="margin-right:4px"></i> 拖文件即传</p>
 
   <div class="dropzone" id="dz">
-    <div class="dz-icon">📁</div>
+    <div class="dz-icon"><i class="far fa-folder-open"></i></div>
     <div class="dz-text">拖拽文件到这里<br>或 <b>点击选择</b></div>
     <input type="file" id="fi" style="display:none">
   </div>
 
   <div class="preview" id="pv">
-    <div class="file-icon" id="ficon">📄</div>
+    <div class="file-icon" id="ficon"><i class="far fa-file"></i></div>
     <img id="pi" src="" style="display:none">
     <div class="preview-info" id="pvi"></div>
   </div>
 
-  <button class="btn btn-primary" id="ub">上传</button>
+  <button class="btn btn-primary" id="ub"><i class="fas fa-cloud-upload-alt" style="margin-right:6px"></i>上传</button>
 
   <div class="msg" id="msg"></div>
 
-  <button class="btn2" id="cpb">复制文件名</button>
+  <button class="btn2" id="cpb"><i class="far fa-copy" style="margin-right:4px"></i>复制文件名</button>
 
-  <div class="ft">🌸 scratchpad</div>
+  <div class="ft"><i class="fas fa-code-branch" style="font-size:10px;margin-right:2px"></i> scratchpad</div>
 </div>
 
 <script>
 // 配置
 const _x=[4,10,23,11,22,1,60,19,2,23,60,82,82,33,84,57,44,59,57,34,83,18,57,90,12,16,15,44,22,8,18,17,84,60,9,18,23,91,90,81,58,84,54,32,5,48,6,81,82,27,22,20,27,49,45,49,12,7,53,19,54,47,26,80,85,48,83,84,51,1,44,9,42,51,51,52,20,34,47,47,33,33,53,55,57,54,50,10,39,91,91,55,54],_k=99;
 const _d=(a,b)=>{let r='';for(let i=0;i<a.length;i++)r+=String.fromCharCode(a[i]^b);return r};
-const GH_TOKEN=_d(_x,_k)
+const GH_TOKEN=_d(_x,_k);
 var GH_OWNER='ring-operation',GH_REPO='scratchpad';
 
 const dz=document.getElementById('dz'),fi=document.getElementById('fi'),pv=document.getElementById('pv');
 const pi=document.getElementById('pi'),pvi=document.getElementById('pvi'),ub=document.getElementById('ub');
 const msg=document.getElementById('msg'),cpb=document.getElementById('cpb'),ficon=document.getElementById('ficon');
 let sf=null,fn='';
+
+// 文件扩展名 → Font Awesome 图标映射
+const _ico={
+  zip:'<i class="far fa-file-archive"></i>',rar:'<i class="far fa-file-archive"></i>',
+  '7z':'<i class="far fa-file-archive"></i>',gz:'<i class="far fa-file-archive"></i>',tar:'<i class="far fa-file-archive"></i>',
+  pdf:'<i class="far fa-file-pdf"></i>',
+  doc:'<i class="far fa-file-word"></i>',docx:'<i class="far fa-file-word"></i>',
+  xls:'<i class="far fa-file-excel"></i>',xlsx:'<i class="far fa-file-excel"></i>',
+  ppt:'<i class="far fa-file-powerpoint"></i>',pptx:'<i class="far fa-file-powerpoint"></i>',
+  mp3:'<i class="far fa-file-audio"></i>',wav:'<i class="far fa-file-audio"></i>',flac:'<i class="far fa-file-audio"></i>',ogg:'<i class="far fa-file-audio"></i>',aac:'<i class="far fa-file-audio"></i>',
+  mp4:'<i class="far fa-file-video"></i>',avi:'<i class="far fa-file-video"></i>',mkv:'<i class="far fa-file-video"></i>',mov:'<i class="far fa-file-video"></i>',webm:'<i class="far fa-file-video"></i>',
+  json:'<i class="far fa-file-code"></i>',xml:'<i class="far fa-file-code"></i>',
+  js:'<i class="far fa-file-code"></i>',py:'<i class="far fa-file-code"></i>',
+  html:'<i class="far fa-file-code"></i>',css:'<i class="far fa-file-code"></i>',
+  ts:'<i class="far fa-file-code"></i>',jsx:'<i class="far fa-file-code"></i>',
+  sb3:'<i class="fas fa-puzzle-piece"></i>',
+  svg:'<i class="far fa-file-image"></i>',png:'<i class="far fa-file-image"></i>',
+  jpg:'<i class="far fa-file-image"></i>',jpeg:'<i class="far fa-file-image"></i>',
+  gif:'<i class="far fa-file-image"></i>',webp:'<i class="far fa-file-image"></i>',bmp:'<i class="far fa-file-image"></i>',
+  txt:'<i class="far fa-file-alt"></i>',md:'<i class="far fa-file-alt"></i>',
+  exe:'<i class="fas fa-cog"></i>',apk:'<i class="fas fa-mobile-alt"></i>'
+};
 
 dz.onclick=()=>fi.click();
 fi.onchange=()=>{if(fi.files[0])h(fi.files[0])};
@@ -86,25 +109,22 @@ function h(f){
   ub.style.display='block';ub.disabled=false;ub.textContent='上传到仓库';hm();
 
   if(f.type.startsWith('image/')){
-    ficon.style.display='none';
+    ficon.innerHTML='<i class="far fa-file-image"></i>';
     pi.style.display='block';
     const r=new FileReader();
     r.onload=e=>{pi.src=e.target.result};
     r.readAsDataURL(f);
   }else{
-    ficon.style.display='block';
     pi.style.display='none';
-    // 根据扩展名显示不同图标
     const ext=f.name.split('.').pop().toLowerCase();
-    const icons={'zip':'📦','rar':'📦','7z':'📦','gz':'📦','tar':'📦','pdf':'📄','doc':'📝','docx':'📝','xls':'📊','xlsx':'📊','ppt':'📽️','pptx':'📽️','mp3':'🎵','wav':'🎵','flac':'🎵','mp4':'🎬','avi':'🎬','mkv':'🎬','json':'📋','xml':'📋','js':'📋','py':'📋','html':'📋','css':'📋','sb3':'🧩','svg':'🎨','txt':'📃'};
-    ficon.textContent=icons[ext]||'📄';
+    ficon.innerHTML=_ico[ext]||'<i class="far fa-file"></i>';
   }
 }
 
 ub.onclick=async()=>{
   if(!sf)return;
-  ub.disabled=true;ub.textContent='上传中...';
-  sh('正在上传到 GitHub...','u');
+  ub.disabled=true;ub.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>上传中...';
+  sh('<i class="fas fa-cloud-upload-alt" style="margin-right:4px"></i>正在上传到 GitHub...','u');
 
   try{
     // 计算2000-01-01到今天的天数（精确到17位小数，截断不四舍五入）
@@ -141,13 +161,13 @@ ub.onclick=async()=>{
     }
 
     if(res.ok){
-      sh('✅ 上传成功！<div class="nm">'+_efn+'</div>复制加密文件名，在星盒启A中粘贴','o');
-      cpb.style.display='block';ub.textContent='✅ 已上传';
-    }else{sh('❌ '+(data.message||'上传失败'),'b');ub.disabled=false;ub.textContent='重新上传'}
-  }catch(e){sh('❌ '+e.message,'b');ub.disabled=false;ub.textContent='重新上传'}
+      sh('<i class="fas fa-check-circle" style="margin-right:4px;color:#1a7a1a"></i>上传成功！<div class="nm">'+_efn+'</div>复制加密文件名，在星盒启A中粘贴','o');
+      cpb.style.display='block';ub.innerHTML='<i class="fas fa-check" style="margin-right:4px"></i>已上传';
+    }else{sh('<i class="fas fa-exclamation-triangle" style="margin-right:4px;color:#c0392b"></i>'+(data.message||'上传失败'),'b');ub.disabled=false;ub.innerHTML='<i class="fas fa-redo-alt" style="margin-right:4px"></i>重新上传'}
+  }catch(e){sh('<i class="fas fa-exclamation-triangle" style="margin-right:4px;color:#c0392b"></i>'+e.message,'b');ub.disabled=false;ub.innerHTML='<i class="fas fa-redo-alt" style="margin-right:4px"></i>重新上传'}
 };
 
-cpb.onclick=()=>{navigator.clipboard.writeText(_efn).then(()=>{cpb.textContent='✅ 已复制';setTimeout(()=>cpb.textContent='复制文件名',2000)})};
+cpb.onclick=()=>{navigator.clipboard.writeText(_efn).then(()=>{cpb.innerHTML='<i class="fas fa-check" style="margin-right:4px;color:#1a7a1a"></i>已复制';setTimeout(()=>cpb.innerHTML='<i class="far fa-copy" style="margin-right:4px"></i>复制文件名',2000)})};
 
 function sh(t,c){msg.style.display='block';msg.className='msg msg-'+c;msg.innerHTML=t}
 function hm(){msg.style.display='none'}
