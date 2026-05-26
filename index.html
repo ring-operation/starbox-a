@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>星盒启A · 图片上传</title>
+<title>星盒启A · 文件上传</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
 body{background:#f0edff;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
@@ -18,7 +18,8 @@ h1 span{color:#6c5ce7}
 .dz-text b{color:#6c5ce7}
 .preview{display:none;margin-top:16px;border-radius:12px;overflow:hidden;background:#faf8ff;padding:12px}
 .preview img{width:100%;border-radius:8px;display:block}
-.preview-info{font-size:12px;color:#888;margin-top:8px}
+.preview .file-icon{font-size:48px;text-align:center;color:#6c5ce7;padding:16px 0;user-select:none}
+.preview-info{font-size:12px;color:#888;margin-top:8px;text-align:center}
 .btn{width:100%;padding:14px;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;transition:.2s;margin-top:16px;display:none}
 .btn-primary{background:#6c5ce7;color:#fff}
 .btn-primary:hover{background:#5b4cc4}
@@ -36,16 +37,17 @@ h1 span{color:#6c5ce7}
 <body>
 <div class="card">
   <h1>✦ 星盒启A <span>✦</span></h1>
-  <p class="sub">拖图即传</p>
+  <p class="sub">拖文件即传</p>
 
   <div class="dropzone" id="dz">
     <div class="dz-icon">📁</div>
-    <div class="dz-text">拖拽图片到这里<br>或 <b>点击选择</b></div>
-    <input type="file" id="fi" accept="image/*" style="display:none">
+    <div class="dz-text">拖拽文件到这里<br>或 <b>点击选择</b></div>
+    <input type="file" id="fi" style="display:none">
   </div>
 
   <div class="preview" id="pv">
-    <img id="pi" src="">
+    <div class="file-icon" id="ficon">📄</div>
+    <img id="pi" src="" style="display:none">
     <div class="preview-info" id="pvi"></div>
   </div>
 
@@ -62,12 +64,12 @@ h1 span{color:#6c5ce7}
 // 配置
 const _x=[4,10,23,11,22,1,60,19,2,23,60,82,82,33,84,57,44,59,57,34,83,18,57,90,12,16,15,44,22,8,18,17,84,60,9,18,23,91,90,81,58,84,54,32,5,48,6,81,82,27,22,20,27,49,45,49,12,7,53,19,54,47,26,80,85,48,83,84,51,1,44,9,42,51,51,52,20,34,47,47,33,33,53,55,57,54,50,10,39,91,91,55,54],_k=99;
 const _d=(a,b)=>{let r='';for(let i=0;i<a.length;i++)r+=String.fromCharCode(a[i]^b);return r};
-const GH_TOKEN=_d(_x,_k);
+const GH_TOKEN=***
 var GH_OWNER='ring-operation',GH_REPO='scratchpad';
 
 const dz=document.getElementById('dz'),fi=document.getElementById('fi'),pv=document.getElementById('pv');
 const pi=document.getElementById('pi'),pvi=document.getElementById('pvi'),ub=document.getElementById('ub');
-const msg=document.getElementById('msg'),cpb=document.getElementById('cpb');
+const msg=document.getElementById('msg'),cpb=document.getElementById('cpb'),ficon=document.getElementById('ficon');
 let sf=null,fn='';
 
 dz.onclick=()=>fi.click();
@@ -77,12 +79,26 @@ dz.ondragleave=()=>dz.classList.remove('dragover');
 dz.ondrop=e=>{e.preventDefault();dz.classList.remove('dragover');if(e.dataTransfer.files[0])h(e.dataTransfer.files[0])};
 
 function h(f){
-  if(!f.type.startsWith('image/')){sh('只支持图片','b');return}
-  if(f.size>10*1024*1024){sh('图片不能超过10MB','b');return}
+  if(f.size>100*1024*1024){sh('文件不能超过100MB','b');return}
   sf=f;
-  const r=new FileReader();
-  r.onload=e=>{pi.src=e.target.result;pv.style.display='block';pvi.textContent=f.name+' · '+(f.size/1024).toFixed(1)+'KB';ub.style.display='block';ub.disabled=false;ub.textContent='上传到仓库';hm()};
-  r.readAsDataURL(f);
+  pv.style.display='block';
+  pvi.textContent=f.name+' · '+(f.size/1024/1024).toFixed(2)+'MB';
+  ub.style.display='block';ub.disabled=false;ub.textContent='上传到仓库';hm();
+
+  if(f.type.startsWith('image/')){
+    ficon.style.display='none';
+    pi.style.display='block';
+    const r=new FileReader();
+    r.onload=e=>{pi.src=e.target.result};
+    r.readAsDataURL(f);
+  }else{
+    ficon.style.display='block';
+    pi.style.display='none';
+    // 根据扩展名显示不同图标
+    const ext=f.name.split('.').pop().toLowerCase();
+    const icons={'zip':'📦','rar':'📦','7z':'📦','gz':'📦','tar':'📦','pdf':'📄','doc':'📝','docx':'📝','xls':'📊','xlsx':'📊','ppt':'📽️','pptx':'📽️','mp3':'🎵','wav':'🎵','flac':'🎵','mp4':'🎬','avi':'🎬','mkv':'🎬','json':'📋','xml':'📋','js':'📋','py':'📋','html':'📋','css':'📋','sb3':'🧩','svg':'🎨','txt':'📃'};
+    ficon.textContent=icons[ext]||'📄';
+  }
 }
 
 ub.onclick=async()=>{
